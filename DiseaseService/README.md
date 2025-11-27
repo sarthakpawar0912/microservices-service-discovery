@@ -21,7 +21,7 @@ Built using **Spring Boot**, **Spring Cloud Netflix**, and **Java**.
 ---
 # 🌐 1. Architecture Diagram
                 
----
+-
         flowchart TB
 
     A[Doctor Portal<br/>(API + Eureka Client)] -->|REST / Feign| B(Eureka Server<br/>(Registry + Health Check))
