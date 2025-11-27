@@ -21,35 +21,14 @@ Built using **Spring Boot**, **Spring Cloud Netflix**, and **Java**.
 ---
 # 🌐 1. Architecture Diagram
                 
---
-                                                 +-----------------------+
-                             |     Doctor Portal     |
-                             | (API + Eureka Client) |
-                             +-----------+-----------+
-                                         |
-                                         |  REST / Feign
-                                         |
-        +-------------------------------+-------------------------------+
-        |                               |                               |
-        |                               |                               |
-+---------------+              +----------------+              +----------------+
-| PatientService|              | DocterService  |              | DiseaseService |
-| (EurekaClient)|              | (EurekaClient) |              | (EurekaClient) |
-+-------+-------+              +--------+-------+              +--------+-------+
-        \                                |                              /
-         \                               |                             /
-          \                              |                            /
-           \                             |                           /
-            \                            |                          /
-             \                           |                         /
-              \                          |                        /
-               \                         |                       /
-                \                        |                      /
-                 +------------------------------------------------+
-                 |                  Eureka Server                  |
-                 |        (Service Registry + Health Check)       |
-                 +------------------------------------------------+
+---
+        flowchart TB
 
+    A[Doctor Portal<br/>(API + Eureka Client)] -->|REST / Feign| B(Eureka Server<br/>(Registry + Health Check))
+
+    B --> C[PatientService<br/>(Eureka Client)]
+    B --> D[DocterService<br/>(Eureka Client)]
+    B --> E[DiseaseService<br/>(Eureka Client)]
 
 ---
 
