@@ -123,7 +123,6 @@ There are **3 ways** to call another service via Eureka:
 InstanceInfo info = eurekaClient.getNextServerFromEureka("DOCTERSERVICE", false);
 String baseUrl = info.getHomePageUrl();
 return restTemplate.getForObject(baseUrl + "/location", String.class);
----
 
 2️⃣ Using LoadBalancerClient (Better Load Balancing)
 JavaServiceInstance instance = loadBalancer.choose("DOCTERSERVICE");
@@ -154,25 +153,6 @@ mvn spring-boot:run
 Wait a few seconds → All services will register with Eureka automatically.
 
 🧪 8. Testing the APIs
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 EndpointDescriptionGET http://localhost:8082/locationDirect call to DocterServiceGET http://localhost:8087/portal-doctorsDoctorPortal calls DocterService via EurekaGET http://localhost:8761Eureka Dashboard - See all registered services
