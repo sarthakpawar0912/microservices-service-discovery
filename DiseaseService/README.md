@@ -21,14 +21,34 @@ Built using **Spring Boot**, **Spring Cloud Netflix**, and **Java**.
 ---
 # 🌐 1. Architecture Diagram
                 
--
-        flowchart TB
+-                    +-------------------+
+                    |   Doctor Portal   |
+                    | (API + Client)    |
+                    +---------+---------+
+                              |
+                              |  REST / Feign
+                              v
+                    +------------------------+
+                    |     Eureka Server      |
+                    | (Service Registry +    |
+                    |    Health Check)       |
+                    +----+---------+---------+
+                         |         |
+                         |         |
+                 --------+         +---------
+                |                            |
+        +---------------+           +---------------+
+        | PatientService|           | DocterService |
+        |  (Eureka Cl.) |           |  (Eureka Cl.) |
+        +---------------+           +---------------+
+                         \         /
+                          \       /
+                           \     /
+                       +----------------+
+                       | DiseaseService |
+                       |  (Eureka Cl.)  |
+                       +----------------+
 
-    A[Doctor Portal<br/>(API + Eureka Client)] -->|REST / Feign| B(Eureka Server<br/>(Registry + Health Check))
-
-    B --> C[PatientService<br/>(Eureka Client)]
-    B --> D[DocterService<br/>(Eureka Client)]
-    B --> E[DiseaseService<br/>(Eureka Client)]
 
 ---
 
