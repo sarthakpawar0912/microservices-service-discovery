@@ -1,3 +1,51 @@
+# 🏥 Microservices Service Discovery System
+
+A complete microservices ecosystem demonstrating **Eureka Server**, **Eureka Clients**, **Inter-Service Communication**, **Load Balancing**, and **Dynamic Port Discovery**.  
+Built using **Spring Boot**, **Spring Cloud Netflix**, and **Java**.
+
+---
+
+# 📘 Table of Contents
+1. [Architecture Diagram](#-1-architecture-diagram)  
+2. [What is Service Discovery?](#-2-what-is-service-discovery)  
+3. [Why Service Discovery is Required?](#-3-why-do-we-need-service-discovery)  
+4. [Types of Service Discovery](#-4-types-of-service-discovery)  
+5. [Project Services Overview](#-5-microservices-in-this-repository)  
+6. [Inter-Service Communication](#-6-inter-service-communication)  
+7. [How to Run the Entire System](#-7-how-to-run-the-entire-system)  
+8. [Testing the APIs](#-8-testing-the-apis)  
+9. [Project Folder Structure](#-9-project-folder-structure)  
+10. [Future Enhancements](#-10-future-enhancements)  
+11. [Author](#-11-author)
+
+---
+
+# 🌐 1. Architecture Diagram
+                    +-----------------------+
+                    |     Doctor Portal     |
+                    | (Eureka Client + API) |
+                    +-----------+-----------+
+                                |
+                                |  REST Call
+                                |  (RestTemplate / Feign)
+                                |
+        +-----------------------+------------------------+
+        |                                                |
+        |                                                |
++---------------+                              +----------------+
+| PatientService|                              | DocterService  |
+| (EurekaClient)|                              | (EurekaClient) |
++-------+-------+                              +-------+--------+
+        \                                                /
+         \                                              /
+          \                                            /
+           \                                          /
+            \                                        /
+             \                                      /
+              +------------------------------------+
+              |            Eureka Server            |
+              |      (Service Registry + Health)    |
+              +------------------------------------+
 
 ---
 
@@ -71,10 +119,11 @@ You **cannot** hardcode URLs like:
 There are **3 ways** to call another service via Eureka:
 
 ### 1️⃣ Using `RestTemplate` + `EurekaClient` (Basic)
-```java
+
 InstanceInfo info = eurekaClient.getNextServerFromEureka("DOCTERSERVICE", false);
 String baseUrl = info.getHomePageUrl();
-return restTemplate.getForObject(baseUrl + "/location", String.class); java```
+return restTemplate.getForObject(baseUrl + "/location", String.class);
+---
 
 2️⃣ Using LoadBalancerClient (Better Load Balancing)
 JavaServiceInstance instance = loadBalancer.choose("DOCTERSERVICE");
