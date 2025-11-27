@@ -1,50 +1,3 @@
-# 🏥 Microservices Service Discovery System  
-A complete microservices ecosystem demonstrating **Eureka Server**, **Eureka Clients**, **Inter-Service Communication**, **Load Balancing**, and **Dynamic Port Discovery**.  
-Built using **Spring Boot**, **Spring Cloud Netflix**, and **Java**.
-
----
-
-# 📘 Table of Contents
-1. Architecture Diagram  
-2. What is Service Discovery?  
-3. Why Service Discovery is Required?  
-4. Types of Service Discovery  
-5. Project Services Overview  
-6. Inter-Service Communication  
-7. How to Run the Entire System  
-8. Project Folder Structure  
-9. Future Enhancements  
-10. Author  
-
----
-
-# 🌐 1. Architecture Diagram
-                    +-----------------------+
-                    |     Doctor Portal     |
-                    | (Eureka Client + API) |
-                    +-----------+-----------+
-                                |
-                                |  REST Call
-                                |  (RestTemplate / Feign)
-                                |
-        +-----------------------+------------------------+
-        |                                                |
-        |                                                |
-+---------------+                              +----------------+
-| PatientService|                              | DocterService  |
-| (EurekaClient)|                              | (EurekaClient) |
-+-------+-------+                              +-------+--------+
-        \                                                /
-         \                                              /
-          \                                            /
-           \                                          /
-            \                                        /
-             \                                      /
-              +------------------------------------+
-              |            Eureka Server            |
-              |      (Service Registry + Health)    |
-              +------------------------------------+
-
 
 ---
 
@@ -53,175 +6,141 @@ Built using **Spring Boot**, **Spring Cloud Netflix**, and **Java**.
 Microservices **do not run on fixed ports**.  
 Their ports may change every time they restart:
 
-- Today DocterService → **8082**  
-- Tomorrow → **8084**  
-- In production → **multiple dynamic instances**  
+- Today → `DocterService` on **8082**
+- Tomorrow → on **8084**
+- In production → **multiple dynamic instances**
 
-You cannot hardcode URLs like:
+You **cannot** hardcode URLs like:  
+`http://localhost:8082/doctors`
 
+➡️ If the port changes → your entire system breaks.
 
-http://localhost:8082/doctors
-
-yaml
-Copy code
-
-If port changes → your system breaks.
-
-👉 **Service Discovery solves this problem.**
+**Service Discovery solves this problem.**
 
 ---
 
 # 🎯 3. Why Do We Need Service Discovery?
 
-Without Service Discovery:
+### Without Service Discovery:
+- ❌ Services cannot find each other
+- ❌ Hardcoded URLs break on restart
+- ❌ No load balancing
+- ❌ Cannot scale horizontally
+- ❌ System becomes fragile in distributed environments
 
-❌ Services cannot find each other  
-❌ You can't load balance  
-❌ You can’t scale horizontally  
-❌ Hardcoded URLs break  
-❌ In distributed systems, everything becomes unstable  
+### With Service Discovery:
+- ✅ Services auto-register themselves
+- ✅ Other services auto-discover them dynamically
+- ✅ No hardcoded IPs/ports
+- ✅ Built-in load balancing
+- ✅ Health checks & instance tracking
+- ✅ Smooth scaling and restarts
 
-With Service Discovery:
-
-✔ Services auto-register  
-✔ Other services auto-discover them  
-✔ No hardcoded URLs  
-✔ Load balancing becomes automatic  
-✔ Restarts don’t affect communication  
-✔ Real-time health checking  
-
-Service Discovery = **Dynamic address book of all microservices.**
+> **Service Discovery = Dynamic address book of all microservices**
 
 ---
 
 # 🧭 4. Types of Service Discovery
 
-| Type | Description | Example |
-|------|-------------|---------|
-| **1. Client-Side Discovery** | Client directly asks registry which instance to call | Eureka |
-| **2. Server-Side Discovery** | Load balancer picks instance for you | AWS ELB |
-| **3. DNS-Based** | DNS resolves service IPs dynamically | Kubernetes |
-| **4. Service Mesh / Sidecar** | Proxy handles discovery & traffic | Istio + Envoy |
+| Type                    | Description                                      | Example            |
+|-------------------------|--------------------------------------------------|--------------------|
+| **Client-Side Discovery** | Client asks registry which instance to call     | **Netflix Eureka** |
+| **Server-Side Discovery** | External load balancer routes traffic            | AWS ELB, NGINX     |
+| **DNS-Based**            | DNS resolves to available service IPs            | Kubernetes         |
+| **Service Mesh / Sidecar** | Sidecar proxy handles discovery & routing       | Istio + Envoy      |
 
-### 👉 Our project uses:  
-**Netflix Eureka = Client-Side Service Discovery**
+### This project uses:  
+**Netflix Eureka → Client-Side Service Discovery**
 
 ---
 
-# 🧩 5. Microservices in This Repository
+# 🩺 5. Microservices in This Repository
 
-### ✔ 1. Eureka-Server  
-- Port: `8761`  
-- Registry for all clients  
-- Tracks health, instances, and availability  
-
-### ✔ 2. DocterService  
-- Doctor service  
-- Auto-registers with Eureka  
-- Endpoints:  
-  - `/doctors`  
-  - `/location`  
-
-### ✔ 3. DoctorPortal  
-- Acts as API client  
-- Calls DocterService using Eureka Discovery  
-- Shows dynamic communication  
-
-### ✔ 4. PatientService  
-- Basic patient microservice  
-- Also registers with Eureka  
-
-### ✔ 5. DiseaseService *(optional)*  
-- Extra service for testing multi-service architecture  
+| Service           | Port  | Description                                      | Eureka Client |
+|-------------------|-------|--------------------------------------------------|---------------|
+| **Eureka-Server**     | 8761  | Central service registry & dashboard            | No            |
+| **DocterService**     | 8082  | Provides doctor-related APIs                     | Yes           |
+| **DoctorPortal**      | 8087  | Frontend/API gateway that calls DocterService    | Yes           |
+| **PatientService**    | 8083  | Patient management microservice                  | Yes           |
+| **DiseaseService**    | 8085  | Optional service for multi-service testing       | Yes           |
 
 ---
 
 # 🔄 6. Inter-Service Communication
 
-There are **3 ways**:
+There are **3 ways** to call another service via Eureka:
 
----
-
-## 1️⃣ Using RestTemplate (simple & working)
-
+### 1️⃣ Using `RestTemplate` + `EurekaClient` (Basic)
 ```java
 InstanceInfo info = eurekaClient.getNextServerFromEureka("DOCTERSERVICE", false);
 String baseUrl = info.getHomePageUrl();
+return restTemplate.getForObject(baseUrl + "/location", String.class); java```
 
-return restTemplate.getForObject(baseUrl + "/location", String.class); ```
-
-2️⃣ Using LoadBalancerClient (better load balancing)
-java
-Copy code
-ServiceInstance instance = loadBalancer.choose("DOCTERSERVICE");
+2️⃣ Using LoadBalancerClient (Better Load Balancing)
+JavaServiceInstance instance = loadBalancer.choose("DOCTERSERVICE");
 String url = instance.getUri() + "/location";
-3️⃣ Using OpenFeign (modern, clean, recommended)
-java
-Copy code
-@FeignClient("DOCTERSERVICE")
-public interface DoctorFeign {
+return restTemplate.getForObject(url, String.class);
+3️⃣ Using OpenFeign (Recommended - Clean & Declarative)
+Java@FeignClient(name = "DOCTERSERVICE")
+public interface DoctorFeignClient {
     @GetMapping("/location")
     String getLocation();
 }
-🧪 7. How to Run the Entire System
-Follow this order:
 
-Step 1 — Start Eureka Server
-arduino
-Copy code
+🛠 7. How to Run the Entire System
+Start services in this exact order:
+Bash# Step 1: Start Eureka Server (Registry)
 cd Eureka-Server
 mvn spring-boot:run
-Open dashboard:
-
-👉 http://localhost:8761/
-
-Step 2 — Start DocterService
-arduino
-Copy code
+➡️ Open Eureka Dashboard: http://localhost:8761
+Bash# Step 2: Start DocterService
 cd DocterService
 mvn spring-boot:run
-Step 3 — Start DoctorPortal
-arduino
-Copy code
-cd DoctorPortal
-mvn spring-boot:run
-Step 4 — Start PatientService
-arduino
-Copy code
+Bash# Step 3: Start PatientService (optional)
 cd PatientService
 mvn spring-boot:run
-🔍 8. Testing the APIs
-DocterService:
-bash
-Copy code
-http://localhost:8082/location
-DoctorPortal (calls DocterService internally):
-bash
-Copy code
-http://localhost:8087/portal-doctors
+Bash# Step 4: Start DoctorPortal (Consumer)
+cd DoctorPortal
+mvn spring-boot:run
+Wait a few seconds → All services will register with Eureka automatically.
+
+🧪 8. Testing the APIs
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+EndpointDescriptionGET http://localhost:8082/locationDirect call to DocterServiceGET http://localhost:8087/portal-doctorsDoctorPortal calls DocterService via EurekaGET http://localhost:8761Eureka Dashboard - See all registered services
+
 📁 9. Project Folder Structure
-arduino
-Copy code
-.
+text.
 ├── Eureka-Server/
 ├── DocterService/
 ├── DoctorPortal/
 ├── PatientService/
-├── DiseaseService/
+├── DiseaseService/        (optional)
 └── README.md
+
 🚀 10. Future Enhancements
-Enhancement	Purpose
-API Gateway (Spring Cloud Gateway)	Central routing
-Spring Cloud Config Server	Externalized config
-Load Balancing	Using Spring Cloud LoadBalancer
-OpenFeign	Clean inter-service calling
-Zipkin + Sleuth	Distributed tracing
-Resilience4J	Circuit breakers, retries
-Dockerization	Containerize all services
-Kubernetes	Production-grade orchestration
+
+FeaturePurposeSpring Cloud GatewayAPI Gateway & RoutingSpring Cloud Config ServerCentralized ConfigurationSpring Cloud LoadBalancerAdvanced client-side load balancingOpenFeign + Hystrix/Resilience4jDeclarative clients + Circuit BreakerZipkin + SleuthDistributed TracingDocker + Docker ComposeContainerizationKubernetesOrchestration & Deployment
 
 👨‍💻 11. Author
 Sarthak Pawar
-Backend Developer | Java | Spring Boot | Microservices
-
-Instagram • GitHub • LinkedIn
+Backend Developer | Java | Spring Boot | Microservices Architect
